@@ -1,5 +1,7 @@
-var car = [ {}, 
+let car = [ {}, 
     { X: 90, Y: 381 },
+
+    // Верх машины
     { X: 90, Y: 381 },
     { X: 94, Y: 300 },
     { X: 260, Y: 300 },
@@ -12,7 +14,7 @@ var car = [ {},
     { X: 681, Y: 381 },
     { X: 650, Y: 381 },
 
-    // Колесо справа
+    // Крыло справа
     { X: 650, Y: 381 },
     { X: 610, Y: 330 },
     { X: 575, Y: 320 },
@@ -22,7 +24,7 @@ var car = [ {},
     { X: 500, Y: 381 },
     { X: 280, Y: 381 },
 
-    // Колесо слева
+    // Крыло слева
     { X: 280, Y: 381 },
     { X: 240, Y: 330 },
     { X: 205, Y: 320 },
@@ -31,65 +33,71 @@ var car = [ {},
 
     { X: 130, Y: 381 },
     { X: 90, Y: 381 },
+
     { X: 90, Y: 381 }
 ];
-var car_k = car.length - 1;
 
-var plot = function (x, y, c) { // ”становить пиксель в т. (x, y) с прозрачностью c 
+let plot = function (x, y, c) {
     if (isFinite(x) && isFinite(y)) {
-        var color = {
-            r: plot.color.r,
-            g: plot.color.g,
-            b: plot.color.b,
-            a: plot.color.a * c
-        };
-
+        let color = { r: plot.color.r, g: plot.color.g, b: plot.color.b, a: plot.color.a * c };
         setPixel(x, y, color);
     }
 };
 
-function setPixel(x, y, c) { // функция установки пикселя в js
+// функция установки пикселя в js
+let setPixel = (x, y, c) => {
     c = c || 1;
-    var p = ctx.createImageData(1, 1);
+    let p = ctx.createImageData(1, 1);
     p.data[0] = c.r;
     p.data[1] = c.g;
     p.data[2] = c.b;
     p.data[3] = c.a;
-    var data = ctx.getImageData(x, y, 1, 1).data;
+    let data = ctx.getImageData(x, y, 1, 1).data;
     if (data[3] <= p.data[3])
         ctx.putImageData(p, x, y);
-}
+};
 
-function drawSpline(coords, k, color) {
-    var num = 0;
-    for (var i = 0; i < 2 * k; i += 2) {
+let drawSpline = (coords, k, color) => {
+    let num = 0;
+    for (let i = 0; i < 2 * k; i += 2) {
         if (i > 0) {
-            var deltaX = coords[i / 2 + 1].X - coords[i / 2].X;
-            var deltaY = coords[i / 2 + 1].Y - coords[i / 2].Y;
+            let deltaX = coords[i / 2 + 1].X - coords[i / 2].X;
+            let deltaY = coords[i / 2 + 1].Y - coords[i / 2].Y;
             num += Math.sqrt(deltaX * deltaX + deltaY * deltaY);
         }
     }
     coords[0] = coords[1];
     coords[coords.length] = coords[coords.length - 1];
     plot.color = color;
-    for (var i = 1; i <= coords.length - 3; i++)// в цикле по всем четвёркам точек
-    {
-        var a = [], b = [];
+
+    // в цикле по всем четвёркам точек
+    for (let i = 1; i <= coords.length - 3; i++) {
+
+        let a = [], b = [];
         arrs = { a: a, b: b };
-        _SplineCoefficient(i, arrs, coords);// считаем коэффициенты q   `
-        var points = {};// создаём массив промежуточных точек
-        for (var j = 0; j < num; j++) {
-            var t = j / num;// шаг интерполяции
+
+        // считаем коэффициенты q  
+        _SplineCoefficient(i, arrs, coords);
+
+        // создаём массив промежуточных точек
+        let points = {};
+
+        for (let j = 0; j < num; j++) {
+
+            // шаг интерполяции
+            let t = j / num;
+
             // передаём массиву точек значения по методу beta-spline
             points.X = (arrs.a[0] + t * (arrs.a[1] + t * (arrs.a[2] + t * arrs.a[3])));
             points.Y = (arrs.b[0] + t * (arrs.b[1] + t * (arrs.b[2] + t * arrs.b[3])));
+
             plot(points.X, points.Y, color.a / 255);
         }
     }
-}
+};
 
-function _SplineCoefficient(i, arrs, coords)// в функции рассчитываютс¤ коэффициенты a0-a3, b0-b3
-{
+// в функции рассчитываютс¤ коэффициенты a0-a3, b0-b3
+let _SplineCoefficient = (i, arrs, coords) => {
     arrs.a[3] = (-coords[i - 1].X + 3 * coords[i].X - 3 * coords[i + 1].X + coords[i + 2].X) / 6;
     arrs.a[2] = (coords[i - 1].X - 2 * coords[i].X + coords[i + 1].X) / 2;
     arrs.a[1] = (-coords[i - 1].X + coords[i + 1].X) / 2;
@@ -98,21 +106,26 @@ function _SplineCoefficient(i, arrs, coords)// в функции рассчит�
     arrs.b[2] = (coords[i - 1].Y - 2 * coords[i].Y + coords[i + 1].Y) / 2;
     arrs.b[1] = (-coords[i - 1].Y + coords[i + 1].Y) / 2;
     arrs.b[0] = (coords[i - 1].Y + 4 * coords[i].Y + coords[i + 1].Y) / 6;
-}
+};
 
-var ctx = document.getElementById("canvas").getContext('2d');
+// Инициализируем канвас
+let ctx = document.getElementById("canvas").getContext('2d');
 
+// Очищаем канвас
 ctx.clearRect(0, 0, 1500, 800);
 
-drawSpline(car, car_k, { r: 0, g: 0, b: 0, a: 255 }, car[car_k - 3].X, car[car_k - 3].Y, car[car_k - 2].X, car[car_k - 2].Y, car[car_k - 1].X, car[car_k - 1].Y, car[car_k].X, car[car_k].Y);
+// Рисуем сплайн
+drawSpline(car, car.length - 1, { r: 0, g: 0, b: 0, a: 255 });
 
 ctx.beginPath()
 ctx.strokeStyle = "black"
 
+// Колесо справа
 ctx.beginPath()
 ctx.arc(575, 381, 40, 0, 2 * Math.PI)
 ctx.stroke()
 
+// Колесо слева
 ctx.beginPath()
 ctx.arc(205, 381, 40, 0, 2 * Math.PI)
 ctx.stroke()
